@@ -1,10 +1,5 @@
 <?php
-include_once(dirname(__FILE__).'/../../../../bootstrap.php');
-PapayaTestCase::registerPapayaAutoloader(
-  array(
-    'PapayaModuleTwitter' => 'modules/free/Twitter'
-  )
-);
+require_once(dirname(__FILE__).'/bootstrap.php');
 
 class PapayaModuleTwitterApiTest extends PapayaTestCase {
   /**
