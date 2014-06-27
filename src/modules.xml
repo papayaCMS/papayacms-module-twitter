@@ -13,6 +13,13 @@
       This box module displays twitter statuses of a specified twitter user. The number of
       displayed statuses can also be specified in the content section of each box.
     </module>
+    <module type="connector"
+      guid="3239c62be16c65bc389f45f95cfef6e8"
+      name="Twitter Connector"
+      class="PapayaModuleTwitterConnector"
+      file="Connector.php">
+      The connector allows other modules to access the twitter API to read and send tweets.
+    </module>
   </modules>
   <tables>
   </tables>

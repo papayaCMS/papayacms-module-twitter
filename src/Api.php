@@ -13,7 +13,7 @@
 *
 * @package Papaya-Modules
 * @subpackage Free-Twitter
-* @version $Id: Api.php 39583 2014-03-17 11:00:08Z weinert $
+* @version $Id: Api.php 39861 2014-06-27 09:38:58Z kersken $
 */
 
 /**
@@ -60,7 +60,13 @@ class PapayaModuleTwitterApi {
   * URL to send requests to
   * @var string
   */
-  protected $_url = '';
+  private $_url = '';
+
+  /**
+  * Override URL (for testing purposes)
+  * @var string
+  */
+  protected $_overrideUrl = '';
 
   /**
   * Current time
@@ -79,7 +85,8 @@ class PapayaModuleTwitterApi {
   * @var array
   */
   private $_availableUrls = array(
-    'user_timeline' => 'https://api.twitter.com/1.1/statuses/user_timeline.json'
+    'user_timeline' => 'https://api.twitter.com/1.1/statuses/user_timeline.json',
+    'update' => 'https://api.twitter.com/1.1/statuses/update.json'
   );
 
   /**
@@ -103,6 +110,17 @@ class PapayaModuleTwitterApi {
     if (!is_array($configuration)) {
       throw new InvalidArgumentException('Array with OAuth configuration data expected.');
     }
+    $this->setConfiguration($configuration);
+    $this->mode($mode);
+  }
+
+  /**
+  * Set the API configuration
+  *
+  * @param array $configuration
+  * @throws InvalidArgumentException
+  */
+  public function setConfiguration($configuration) {
     $keys = array('access_token', 'access_secret', 'consumer_key', 'consumer_secret');
     foreach ($keys as $key) {
       if (!isset($configuration[$key])) {
@@ -113,10 +131,40 @@ class PapayaModuleTwitterApi {
     $this->_accessSecret = $configuration['access_secret'];
     $this->_consumerKey = $configuration['consumer_key'];
     $this->_consumerSecret = $configuration['consumer_secret'];
-    if (array_key_exists($mode, $this->_availableUrls)) {
-      $this->_mode = $mode;
+  }
+
+  /**
+  * Set/get the URL
+  *
+  * @param string $url optional, default NULL
+  * @return string
+  */
+  public function url($url = NULL) {
+    if (!empty($this->_overrideUrl)) {
+      return $this->_overrideUrl;
     }
-    $this->_url = $this->_availableUrls[$this->_mode];
+    if ($url !== NULL) {
+      $this->_url = $url;
+    }
+    return $this->_url;
+  }
+
+  /**
+  * Set/get the mode of operations
+  *
+  * If setting another mode, the URL must be adjusted as well.
+  *
+  */
+  public function mode($mode = NULL) {
+    if ($mode !== NULL) {
+      if (array_key_exists($mode, $this->_availableUrls)) {
+        $this->_mode = $mode;
+      } else {
+        $this->_mode = 'user_timeline';
+      }
+      $this->url($this->_availableUrls[$this->_mode]);
+    }
+    return $this->_mode;
   }
 
   /**
@@ -183,7 +231,7 @@ class PapayaModuleTwitterApi {
     return sprintf(
       '%s&%s&%s',
       $this->_method,
-      rawurlencode($this->_url),
+      rawurlencode($this->url()),
       rawurlencode(implode('&', $result))
     );
   }
@@ -242,17 +290,17 @@ class PapayaModuleTwitterApi {
   public function send() {
     $parameters = $this->parameters();
     $header = 'Authorization: '.$this->getAuthHeader()."\r\n";
-    $url = $this->_url;
     if (count($parameters) > 0 && $this->method() == 'GET') {
-      $url .= '?'.$parameters->__toString();
+      $this->url($this->url().'?'.$parameters->__toString());
     }
+    $url = $this->url();
     $streamOptions = array(
       'method' => $this->method(),
       'header' => $header,
       'verify_peer' => FALSE
     );
     if (count($this->parameters()) > 0 && $this->method() == 'POST') {
-      $streamOptions['http']['content'] = $this->parameters()->__toString();
+      $streamOptions['content'] = $this->parameters()->__toString();
     }
     $context = stream_context_create(
       array('http' => $streamOptions)
@@ -262,6 +310,41 @@ class PapayaModuleTwitterApi {
       $json = stream_get_contents($stream);
       fclose($stream);
     }
+    return $json;
+  }
+
+  /**
+  * Update timeline (tweet something)
+  *
+  * @param string $text The text to be tweeted
+  * @return mixed string JSON on success, boolean FALSE otherwise
+  */
+  public function update($text) {
+    $previousMode = $this->mode();
+    $this->mode('update');
+    $this->method('POST');
+    $text = rawurlencode(substr($text, 0, 140));
+    $body = sprintf('status=%s', $text);
+    $this->parameters(array('status' => $text));
+    $header = 'Authorization: '.$this->getAuthHeader()."\r\n";
+    $header .= "Content-Type: application/x-www-form-urlencoded\r\n";
+    $header .= 'Content-Length: '.strlen($body)."\r\n";
+    $url = $this->url();
+    $streamOptions = array(
+      'method' => $this->method(),
+      'header' => $header,
+      'verify_peer' => FALSE,
+      'content' => $body
+    );
+    $context = stream_context_create(
+      array('http' => $streamOptions)
+    );
+    $json = FALSE;
+    if ($stream = fopen($url, 'r', FALSE, $context)) {
+      $json = stream_get_contents($stream);
+      fclose($stream);
+    }
+    $this->mode($previousMode);
     return $json;
   }
 }

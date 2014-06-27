@@ -1,7 +1,13 @@
 <?php
 require_once(dirname(__FILE__).'/bootstrap.php');
-
 class PapayaModuleTwitterApiTest extends PapayaTestCase {
+  private $_options = array(
+    'access_token' => '12345',
+    'access_secret' => '67890',
+    'consumer_key' => 'abcde',
+    'consumer_secret' => 'fghij'
+  );
+
   /**
   * @covers PapayaModuleTwitterApi::__construct
   */
@@ -17,26 +23,8 @@ class PapayaModuleTwitterApiTest extends PapayaTestCase {
   /**
   * @covers PapayaModuleTwitterApi::__construct
   */
-  public function testConstructExpectingInvalidArgumentExceptionMissingData() {
-    try {
-      new PapayaModuleTwitterApi(array());
-      $this->fail('Expected InvalidArgumentException not thrown.');
-    } catch(InvalidArgumentException $e) {
-      $this->assertEquals('Expected key access_token not found.', $e->getMessage());
-    }
-  }
-
-  /**
-  * @covers PapayaModuleTwitterApi::__construct
-  */
   public function testConstructCorrect() {
-    $options = array(
-      'access_token' => '12345',
-      'access_secret' => '67890',
-      'consumer_key' => 'abcde',
-      'consumer_secret' => 'fghij'
-    );
-    $api = new PapayaModuleTwitterApi($options);
+    $api = new PapayaModuleTwitterApi($this->_options);
     $this->assertAttributeEquals('12345', '_accessToken', $api);
     $this->assertAttributeEquals('67890', '_accessSecret', $api);
     $this->assertAttributeEquals('abcde', '_consumerKey', $api);
@@ -44,16 +32,74 @@ class PapayaModuleTwitterApiTest extends PapayaTestCase {
   }
 
   /**
+  * @covers PapayaModuleTwitterApi::setConfiguration
+  */
+  public function testConfigurationExpectingInvalidArgumentExceptionMissingData() {
+    $api = new PapayaModuleTwitterApi($this->_options);
+    try {
+      $api->setConfiguration(array());
+      $this->fail('Expected InvalidArgumentException not thrown.');
+    } catch(InvalidArgumentException $e) {
+      $this->assertEquals('Expected key access_token not found.', $e->getMessage());
+    }
+  }
+
+  /**
+  * @covers PapayaModuleTwitterApi::setConfiguration
+  */
+  public function testSetConfigurationCorrect() {
+    $api = new PapayaModuleTwitterApi($this->_options);
+    $options = array(
+      'access_token' => '34567',
+      'access_secret' => '89012',
+      'consumer_key' => 'cdefg',
+      'consumer_secret' => 'hijkl'
+    );
+    $api->setConfiguration($options);
+    $this->assertAttributeEquals('34567', '_accessToken', $api);
+    $this->assertAttributeEquals('89012', '_accessSecret', $api);
+    $this->assertAttributeEquals('cdefg', '_consumerKey', $api);
+    $this->assertAttributeEquals('hijkl', '_consumerSecret', $api);
+  }
+
+  /**
+  * @covers PapayaModuleTwitterApi::url
+  */
+  public function testUrlWithOverride() {
+    $api = new PapayaModuleTwitterApi_TestProxy($this->_options);
+    $api->_overrideUrl = 'http://example.com/';
+    $this->assertEquals('http://example.com/', $api->url());
+  }
+
+  /**
+  * @covers PapayaModuleTwitterApi::url
+  */
+  public function testUrl() {
+    $api = new PapayaModuleTwitterApi($this->_options);
+    $this->assertEquals('http://example.org/', $api->url('http://example.org/'));
+  }
+
+  /**
+  * @covers PapayaModuleTwitterApi::mode
+  */
+  public function testMode() {
+    $api = new PapayaModuleTwitterApi($this->_options);
+    $this->assertEquals('update', $api->mode('update'));
+  }
+
+  /**
+  * @covers PapayaModuleTwitterApi::mode
+  */
+  public function testModeInvalid() {
+    $api = new PapayaModuleTwitterApi($this->_options);
+    $this->assertEquals('user_timeline', $api->mode('INVALID MODE'));
+  }
+
+  /**
   * @covers PapayaModuleTwitterApi::time
   */
   public function testTime() {
-    $options = array(
-      'access_token' => '12345',
-      'access_secret' => '67890',
-      'consumer_key' => 'abcde',
-      'consumer_secret' => 'fghij'
-    );
-    $api = new PapayaModuleTwitterApi($options);
+    $api = new PapayaModuleTwitterApi($this->_options);
     $this->assertEquals(1234567890, $api->time(1234567890));
   }
 
@@ -61,13 +107,7 @@ class PapayaModuleTwitterApiTest extends PapayaTestCase {
   * @covers PapayaModuleTwitterApi::method
   */
   public function testMethod() {
-    $options = array(
-      'access_token' => '12345',
-      'access_secret' => '67890',
-      'consumer_key' => 'abcde',
-      'consumer_secret' => 'fghij'
-    );
-    $api = new PapayaModuleTwitterApi($options);
+    $api = new PapayaModuleTwitterApi($this->_options);
     $this->assertEquals('POST', $api->method('post'));
   }
 
@@ -75,13 +115,7 @@ class PapayaModuleTwitterApiTest extends PapayaTestCase {
   * @covers PapayaModuleTwitterApi::parameters
   */
   public function testParametersSetObject() {
-    $options = array(
-      'access_token' => '12345',
-      'access_secret' => '67890',
-      'consumer_key' => 'abcde',
-      'consumer_secret' => 'fghij'
-    );
-    $api = new PapayaModuleTwitterApi($options);
+    $api = new PapayaModuleTwitterApi($this->_options);
     $parameters = $this->getMockBuilder('PapayaModuleTwitterApiParameters')->getMock();
     $this->assertEquals($parameters, $api->parameters($parameters));
   }
@@ -90,13 +124,7 @@ class PapayaModuleTwitterApiTest extends PapayaTestCase {
   * @covers PapayaModuleTwitterApi::parameters
   */
   public function testParametersInitialize() {
-    $options = array(
-      'access_token' => '12345',
-      'access_secret' => '67890',
-      'consumer_key' => 'abcde',
-      'consumer_secret' => 'fghij'
-    );
-    $api = new PapayaModuleTwitterApi($options);
+    $api = new PapayaModuleTwitterApi($this->_options);
     $this->assertInstanceOf('PapayaModuleTwitterApiParameters', $api->parameters());
   }
 
@@ -104,13 +132,7 @@ class PapayaModuleTwitterApiTest extends PapayaTestCase {
   * @covers PapayaModuleTwitterApi::parameters
   */
   public function testParametersSetData() {
-    $options = array(
-      'access_token' => '12345',
-      'access_secret' => '67890',
-      'consumer_key' => 'abcde',
-      'consumer_secret' => 'fghij'
-    );
-    $api = new PapayaModuleTwitterApi($options);
+    $api = new PapayaModuleTwitterApi($this->_options);
     $parameters = $api->parameters(array('foo' => 'bar', 'baz' => 'tux'));
     $this->assertEquals(array('foo' => 'bar', 'baz' => 'tux'), $parameters->data());
   }
@@ -119,18 +141,12 @@ class PapayaModuleTwitterApiTest extends PapayaTestCase {
   * @covers PapayaModuleTwitterApi::getBaseInfo
   */
   public function testGetBaseInfo() {
-    $options = array(
-      'access_token' => '12345',
-      'access_secret' => '67890',
-      'consumer_key' => 'abcde',
-      'consumer_secret' => 'fghij'
-    );
-    $api = new PapayaModuleTwitterApi($options);
+    $api = new PapayaModuleTwitterApi($this->_options);
     $oauth = array(
-      'oauth_consumer_key' => $options['consumer_key'],
+      'oauth_consumer_key' => $this->_options['consumer_key'],
       'oauth_nonce' => 1234567890,
       'oauth_signature_method' => 'HMAC-SHA1',
-      'oauth_token' => $options['access_token'],
+      'oauth_token' => $this->_options['access_token'],
       'oauth_timestamp' => 1234567890,
       'oauth_version' => '1.0',
       'screen_name' => 'SomeTwitterUser'
@@ -148,13 +164,7 @@ class PapayaModuleTwitterApiTest extends PapayaTestCase {
   * @covers PapayaModuleTwitterApi::getOauth
   */
   public function testGetOauth() {
-    $options = array(
-      'access_token' => '12345',
-      'access_secret' => '67890',
-      'consumer_key' => 'abcde',
-      'consumer_secret' => 'fghij'
-    );
-    $api = new PapayaModuleTwitterApi($options);
+    $api = new PapayaModuleTwitterApi($this->_options);
     $api->parameters(array('screen_name' => 'SomeTwitterUser'));
     $api->time(1234567890);
     $this->assertEquals(
@@ -176,13 +186,7 @@ class PapayaModuleTwitterApiTest extends PapayaTestCase {
   * @covers PapayaModuleTwitterApi::getAuthHeader
   */
   public function testGetAuthHeader() {
-    $options = array(
-      'access_token' => '12345',
-      'access_secret' => '67890',
-      'consumer_key' => 'abcde',
-      'consumer_secret' => 'fghij'
-    );
-    $api = new PapayaModuleTwitterApi($options);
+    $api = new PapayaModuleTwitterApi($this->_options);
     $api->parameters(array('screen_name' => 'SomeTwitterUser'));
     $api->time(1234567890);
     $this->assertEquals(
@@ -196,26 +200,43 @@ class PapayaModuleTwitterApiTest extends PapayaTestCase {
 
   /**
   * @covers PapayaModuleTwitterApi::send
+  * @dataProvider dataProviderMethod
   */
-  public function testSend() {
-    $options = array(
-      'access_token' => '12345',
-      'access_secret' => '67890',
-      'consumer_key' => 'abcde',
-      'consumer_secret' => 'fghij'
-    );
-    $api = new PapayaModuleTwitterApi_TestProxy($options);
+  public function testSend($method) {
+    $api = new PapayaModuleTwitterApi_TestProxy($this->_options);
     $api->parameters(array('screen_name' => 'SomeTwitterUser'));
-    $api->method('POST');
+    $api->method($method);
     $api->time(1234567890);
-    $api->_url = dirname(__FILE__).'/json.txt';
+    $api->_overrideUrl = dirname(__FILE__).'/json.txt';
     $object = new stdClass();
     $object->text = 'Some test text';
     $expected = json_encode(array($object))."\n";
     $this->assertEquals($expected, $api->send());
   }
+
+  /**
+  * @covers PapayaModuleTwitterApi::update
+  */
+  public function testUpdate() {
+    $api = new PapayaModuleTwitterApi_TestProxy($this->_options);
+    $api->parameters(array('screen_name' => 'SomeTwitterUser'));
+    $api->method('POST');
+    $api->time(1234567890);
+    $api->_overrideUrl = dirname(__FILE__).'/json.txt';
+    $object = new stdClass();
+    $object->text = 'Some test text';
+    $expected = json_encode(array($object))."\n";
+    $this->assertEquals($expected, $api->update('Test tweet text.'));
+  }
+
+  public static function dataProviderMethod() {
+    return array(
+      array('POST'),
+      array('GET')
+    );
+  }
 }
 
 class PapayaModuleTwitterApi_TestProxy extends PapayaModuleTwitterApi {
-  public $_url;
+  public $_overrideUrl;
 }
