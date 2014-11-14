@@ -251,7 +251,7 @@ class PapayaModuleTwitterBoxBaseTest extends PapayaTestCase {
       '<a class="twitterReply" target="_blank" href="http://twitter.com/User">@User</a>'.
       ': More info about '.
       '<a class="twitterHashtag" target="_blank"'.
-      ' href="http://search.twitter.com/search?tag=subject">#subject</a> at '.
+      ' href="http://twitter.com/search?q=subject">#subject</a> at '.
       '<a class="twitterLink" href="http://bit.ly/subject" target="_blank">http://bit.ly/subject</a>'.
       ' or mail '.
       '<a class="twitterMail" href="mailto:info@subject.info">info@subject.info</a>',
