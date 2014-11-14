@@ -199,7 +199,7 @@ class PapayaModuleTwitterBoxBase extends PapayaObject {
     if ($this->_data['link_tags'] == 1) {
       $pattern[] = "((^|[\\s])#([^\\s.,;!?]+))";
       $replacement[] = '$1<a class="twitterHashtag"'.
-        ' target="_blank" href="http://search.twitter.com/search?tag=$2">#$2</a>';
+        ' target="_blank" href="http://twitter.com/search?q=$2">#$2</a>';
     }
     if ($this->_data['link_urls'] == 1) {
       // matches an "xxxx://yyyy" URL at the start of a line, or after a space.
