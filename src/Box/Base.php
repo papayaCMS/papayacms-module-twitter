@@ -151,6 +151,7 @@ class PapayaModuleTwitterBoxBase extends PapayaObject {
       'include_rts' => $this->_data['include_rts']
     );
     if (
+      is_object($cache) &&
       $json = $cache->read(
         'twitter',
         $this->_data['screen_name'],
@@ -169,11 +170,11 @@ class PapayaModuleTwitterBoxBase extends PapayaObject {
     }
 
     // Fallback for broken twitter API
-    if (!$json) {
+    if (is_object($cache) && !$json) {
       $json = $cache->read('twitter', $this->_data['screen_name'], $arrParams, 604800);
     }
     // Refresh cache
-    if ($json) {
+    if (is_object($cache) && $json) {
       $cache->write('twitter', $this->_data['screen_name'], $arrParams, $json);
     }
     return $json;
